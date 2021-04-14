@@ -15,6 +15,7 @@ const (
 	ErrCodeInternalServerError
 
 	ErrCodeNeedLogin
+	ErrCodeInvalidSign
 	ErrCodeInvalidToken
 
 	ErrCodeUserExist
@@ -38,6 +39,7 @@ var errCodeMsgMap = map[ErrCode]string{
 	ErrCodeInternalServerError: "服务器内部错误",
 
 	ErrCodeNeedLogin:    "需要登录",
+	ErrCodeInvalidSign:  "无效的签名",
 	ErrCodeInvalidToken: "无效的token",
 
 	ErrCodeUserExist:       "用户已存在",

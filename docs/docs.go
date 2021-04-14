@@ -24,6 +24,63 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/login": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Login"
+                ],
+                "summary": "通过刷新token获取token",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/network.RefreshLoginTokenPutParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/network.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/login/oauth2": {
             "post": {
                 "consumes": [
@@ -55,6 +112,12 @@ var doc = `{
                         }
                     },
                     "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "403": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/network.HTTPErrResponse"
@@ -103,7 +166,6 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "example": "university",
                         "description": "重定向：university",
                         "name": "service",
                         "in": "query",
@@ -153,7 +215,8 @@ var doc = `{
             "properties": {
                 "sign": {
                     "description": "登录签名",
-                    "type": "string"
+                    "type": "string",
+                    "example": "1902390173-1765458873155585-WRVFULNCSV-fffc12a5f1d57536c90ecbc8b7bc91ca"
                 }
             }
         },
@@ -201,6 +264,18 @@ var doc = `{
                     "type": "string"
                 },
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "network.RefreshLoginTokenPutParam": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "description": "刷新token",
                     "type": "string"
                 }
             }

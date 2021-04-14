@@ -1,4 +1,4 @@
-name: "oauth"
+name: "oauth2"
 mode: "dev"
 port: 8000
 version: "0.0.1"
@@ -39,4 +39,6 @@ qiniu:
   secret_key: "xxxxxxxxxxxxxxxxxx"
 
 secret:
-  oauth2: "xxxxxxxxxxxxxxxxxx"
+  oauth2: "oauth2"
+  access_token: "access_token"
+  refresh_token: "refresh_token"

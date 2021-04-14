@@ -65,5 +65,7 @@ type QiniuConfig struct {
 }
 
 type Secret struct {
-	Oauth2 string `mapstructure:"oauth2"`
+	Oauth2       string `mapstructure:"oauth2"`
+	AccessToken  string `mapstructure:"access_token"`
+	RefreshToken string `mapstructure:"refresh_token"`
 }

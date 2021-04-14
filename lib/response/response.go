@@ -59,6 +59,24 @@ func Error(ctx *gin.Context, err error) {
 	ctx.JSON(http.StatusBadRequest, &res)
 }
 
+// ErrorSetHTTPStatus 失败响应
+func ErrorSetHTTPStatus(ctx *gin.Context, HTTPStatus int, err error) {
+	res := BaseModel{}
+	res.Detail = map[string]string{}
+
+	HTTPErr, ok := err.(*exception.HTTPError)
+	if !ok {
+		log := logger.NewSentry(ctx)
+		log.Error("捕获到未处理的错误", err)
+		res.SetErrCode(constant.ErrCodeServerBusy)
+		ctx.JSON(http.StatusBadRequest, &res)
+		return
+	}
+
+	res.SetErrCode(HTTPErr.ErrCode)
+	ctx.JSON(HTTPStatus, &res)
+}
+
 // ErrorInvalidParam 失败响应，参数不合法
 func ErrorInvalidParam(ctx *gin.Context, err error) {
 	res := BaseModel{}

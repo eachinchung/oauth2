@@ -22,5 +22,5 @@ type HTTPErrResponse struct {
 // LoginResponse 登录响应
 type LoginResponse struct {
 	response.BaseModel
-	Detail *LoginToken
+	Detail *LoginToken `json:"detail"`
 }

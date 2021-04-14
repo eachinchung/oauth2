@@ -31,6 +31,7 @@ func SetupRouter() *gin.Engine {
 
 	r.GET("/oauth2/wechat/required/subscribe", controller.Oauth2ByWechatLoginRequiredSubscribe)
 	r.POST("/login/oauth2", controller.GenLoginTokenByOauth2)
+	r.PUT("/login", controller.RefreshLoginToken)
 
 	r.NoRoute(controller.NotFound)
 	return r

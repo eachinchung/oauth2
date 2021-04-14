@@ -6,7 +6,6 @@
 package jwt
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -15,23 +14,31 @@ import (
 	"time"
 )
 
-// MyClaims 自定义声明结构体并内嵌jwt.StandardClaims
-type MyClaims struct {
+type Claims interface {
+	Valid() error
+	InitClaims(expires time.Duration)
+}
+
+// BaseClaims 自定义声明结构体并内嵌jwt.StandardClaims
+type BaseClaims struct {
 	UserID int64 `json:"uid"`
 	jwt.StandardClaims
 }
 
-func NewClaims(userID int64) *MyClaims {
-	return &MyClaims{
+func (m *BaseClaims) InitClaims(expires time.Duration) {
+	m.ExpiresAt = time.Now().Add(expires).Unix()
+	m.Issuer = "Kaimon.cn"
+}
+
+func NewClaims(userID int64) *BaseClaims {
+	return &BaseClaims{
 		UserID: userID,
 	}
 }
 
 // GenToken 生成JWT
-func GenToken(ctx *gin.Context, claims *MyClaims, secret string, expiresAt int) (string, error) {
-	fmt.Println(claims)
-	claims.ExpiresAt = time.Now().Add(time.Duration(expiresAt) * time.Hour).Unix()
-	claims.Issuer = "Kaimon.cn"
+func GenToken(ctx *gin.Context, claims Claims, secret string, expires time.Duration) (string, error) {
+	claims.InitClaims(expires)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	if tokenString, err := token.SignedString([]byte(secret)); err != nil {
 		log := logger.NewSentry(ctx)
@@ -43,18 +50,17 @@ func GenToken(ctx *gin.Context, claims *MyClaims, secret string, expiresAt int) 
 }
 
 // ParseToken 解析JWT
-func ParseToken(ctx *gin.Context, tokenString string, secret string) (*MyClaims, error) {
-	// 解析token
-	var claims = new(MyClaims)
+func ParseToken(tokenString string, claims Claims, secret string) error {
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		zap.L().Warn("ParseWithClaimsErr", zap.Error(err))
-		return nil, exception.ErrorServerBusy
+		zap.L().Debug("token 验证出错", zap.Error(err))
+		return exception.ErrorInvalidToken
 	}
 	if !token.Valid {
-		return nil, exception.ErrorServerBusy
+		zap.L().Debug("token 验证不通过", zap.Any("token", token))
+		return exception.ErrorInvalidToken
 	}
-	return claims, nil
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"oauth/constant/exception"
 	"oauth/lib/redis"
@@ -41,14 +42,16 @@ func getWechatUserByOpenID(
 	ctx *gin.Context,
 	engine *gorm.DB,
 	openID string,
-) (wu *mysql.WechatUsers, err error) {
-	key := "w:u:" + openID
-	if wuc, err := redis.Get(ctx, key); err == nil {
-		_ = json.Unmarshal([]byte(wuc), wu)
-		return wu, nil
+) (*mysql.WechatUsers, error) {
+	w := &mysql.WechatUsers{}
+	key := "w:w:" + openID
+	if cache, err := redis.Get(ctx, key); err == nil {
+		_ = json.Unmarshal([]byte(cache), w)
+		zap.L().Debug("从缓存获取微信用户", zap.Uint64("uid", w.UserID))
+		return w, nil
 	}
 
-	if err = engine.Where("open_id = ?", openID).First(&wu).Error; err != nil {
+	if err := engine.Where("open_id = ?", openID).First(w).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = exception.ErrorUserExist
 		} else {
@@ -56,22 +59,13 @@ func getWechatUserByOpenID(
 			log.Error("查询微信用户错误", err)
 			err = exception.ErrorServerBusy
 		}
-		return
+		return w, err
 	}
 
-	wuc, _ := json.Marshal(wu)
-	_ = redis.Set(ctx, key, string(wuc), 10*time.Minute)
-	return
-}
-
-// CreateWechatUser 添加一个用户
-func CreateWechatUser(
-	ctx *gin.Context,
-	userID uint64,
-	openID string,
-	unionID string,
-) error {
-	return createWechatUser(ctx, db, userID, openID, unionID)
+	cache, _ := json.Marshal(w)
+	_ = redis.Set(ctx, key, string(cache), 10*time.Minute)
+	zap.L().Debug("从MySQL获取微信用户", zap.Uint64("uid", w.UserID))
+	return w, nil
 }
 
 // GetWechatUserByOpenID 通过 openid 获取微信用户

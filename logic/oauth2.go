@@ -10,11 +10,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"oauth/constant/exception"
 	"oauth/dao"
 	"oauth/lib/oss"
 	"oauth/lib/requests"
 	"oauth/lib/sonyFlake"
+	"oauth/lib/utils"
 	"oauth/logger"
 	"oauth/model/network"
 	"oauth/setting"
@@ -23,17 +25,39 @@ import (
 	"time"
 )
 
-func genOauth2Sign(userID uint64) string {
+// GenOauth2Sign 生成Oauth2登录的签名
+func GenOauth2Sign(userID uint64) string {
 	var build strings.Builder
+	randomStr := utils.RandString(10)
 	expiresAt := strconv.FormatInt(time.Now().Add(time.Minute).Unix(), 10)
 	uID := strconv.FormatUint(userID, 10)
-	hash := md5.Sum([]byte(expiresAt + uID + setting.Conf.Secret.Oauth2))
+	build.WriteString(expiresAt)
+	build.WriteString(uID)
+	build.WriteString(randomStr)
+	build.WriteString(setting.Conf.Secret.Oauth2)
+	hash := md5.Sum([]byte(build.String()))
+	build.Reset()
 	build.WriteString(expiresAt)
 	build.WriteString("-")
 	build.WriteString(uID)
 	build.WriteString("-")
+	build.WriteString(randomStr)
+	build.WriteString("-")
 	build.WriteString(fmt.Sprintf("%x", hash))
 	return build.String()
+}
+
+// GenOauth2Redirect 生成Oauth2的重定向地址
+func GenOauth2Redirect(redirect string, sign string, param *network.Oauth2ByWechatLoginGetParam) string {
+	var build strings.Builder
+	build.WriteString(redirect)
+	build.WriteString("?sign=")
+	build.WriteString(sign)
+	build.WriteString("&next=")
+	build.WriteString(param.Redirect)
+	result := build.String()
+	zap.L().Debug("重定向地址", zap.String("redirect", result))
+	return result
 }
 
 // Oauth2ByWechatLoginRequiredSubscribe 已关注公众号的微信用户登录接口
@@ -41,18 +65,19 @@ func Oauth2ByWechatLoginRequiredSubscribe(
 	ctx *gin.Context,
 	param *network.Oauth2ByWechatLoginGetParam,
 ) (string, error) {
-	// 登录的重定向地址
+	var sign string
 	var redirect string
 	var oauth2System map[string]string
+
 	config, err := dao.GetNormalConfigByKeyAndVersion(ctx, "oauth2_system", 1)
 	if err != nil {
 		return redirect, err
 	}
 	_ = json.Unmarshal(config, &oauth2System)
-	if redirect, ok := oauth2System[param.Service]; !ok {
+	redirect, ok := oauth2System[param.Service]
+	if !ok {
 		return redirect, exception.ErrorServerBusy
 	}
-	redirect += param.Redirect + "?sign="
 
 	// 获取微信 openid
 	oauth2AccessToken, err := GetWechatOauth2AccessToken(ctx, param.Code)
@@ -63,8 +88,9 @@ func Oauth2ByWechatLoginRequiredSubscribe(
 	// 查询用户
 	wechatUsers, err := dao.GetWechatUserByOpenID(ctx, oauth2AccessToken.Openid)
 	if err == nil {
-		sign := genOauth2Sign(wechatUsers.UserID)
-		return redirect + sign, nil
+		zap.L().Debug("已注册用户用户", zap.Uint64("uid", wechatUsers.UserID))
+		sign = GenOauth2Sign(wechatUsers.UserID)
+		return GenOauth2Redirect(redirect, sign, param), nil
 	}
 
 	// 向微信请求用户信息
@@ -105,7 +131,8 @@ func Oauth2ByWechatLoginRequiredSubscribe(
 		userInfo.HeadImgURL = ossKey
 	}
 
-	sign := genOauth2Sign(userID)
+	sign = GenOauth2Sign(userID)
 	err = dao.CreateUserByWechat(ctx, userID, userInfo.Nickname, userInfo.HeadImgURL, userInfo.Openid, userInfo.Unionid)
-	return redirect + sign, err
+	zap.L().Debug("未注册用户用户", zap.Uint64("uid", userID))
+	return GenOauth2Redirect(redirect, sign, param), err
 }

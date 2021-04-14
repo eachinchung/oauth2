@@ -3,6 +3,7 @@ definitions:
     properties:
       sign:
         description: 登录签名
+        example: 1902390173-1765458873155585-WRVFULNCSV-fffc12a5f1d57536c90ecbc8b7bc91ca
         type: string
     required:
     - sign
@@ -38,12 +39,57 @@ definitions:
       refresh_token:
         type: string
     type: object
+  network.RefreshLoginTokenPutParam:
+    properties:
+      refresh_token:
+        description: 刷新token
+        type: string
+    required:
+    - refresh_token
+    type: object
 info:
   contact: {}
   description: Oauth2后端API接口文档
   title: Oauth2
   version: 0.0.1
 paths:
+  /login:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 请求参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/network.RefreshLoginTokenPutParam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/network.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "403":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "422":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "500":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+      summary: 通过刷新token获取token
+      tags:
+      - Login
   /login/oauth2:
     post:
       consumes:
@@ -63,6 +109,10 @@ paths:
           schema:
             $ref: '#/definitions/network.LoginResponse'
         "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "403":
           description: Bad Request
           schema:
             $ref: '#/definitions/network.HTTPErrResponse'
@@ -92,7 +142,6 @@ paths:
         required: true
         type: string
       - description: 重定向：university
-        example: university
         in: query
         name: service
         required: true

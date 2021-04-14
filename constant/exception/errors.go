@@ -12,6 +12,8 @@ import (
 var (
 	ErrorServerBusy         = NewHTTPError(constant.ErrCodeServerBusy)
 	ErrorUserExist          = NewHTTPError(constant.ErrCodeUserNotExist)
+	ErrorInvalidSign        = NewHTTPError(constant.ErrCodeInvalidSign)
+	ErrorInvalidToken       = NewHTTPError(constant.ErrCodeInvalidToken)
 	ErrorConfigNotExist     = NewHTTPError(constant.ErrCodeConfigNotExist)
 	ErrorWechatNotSubscribe = NewHTTPError(constant.ErrCodeWechatNotSubscribe)
 	ErrorWechatUnauthorized = NewHTTPError(constant.ErrCodeWechatUnauthorized)

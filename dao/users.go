@@ -34,16 +34,6 @@ func createUser(
 	return
 }
 
-// CreateUser 添加一个用户
-func CreateUser(
-	ctx *gin.Context,
-	userID uint64,
-	username string,
-	avatar string,
-) error {
-	return createUser(ctx, db, userID, username, avatar)
-}
-
 // CreateUserByWechat 通过微信添加一个新用户
 func CreateUserByWechat(
 	ctx *gin.Context,
