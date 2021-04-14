@@ -1,0 +1,125 @@
+definitions:
+  network.GenLoginTokenByOauth2PostParam:
+    properties:
+      sign:
+        description: 登录签名
+        type: string
+    required:
+    - sign
+    type: object
+  network.HTTPErrResponse:
+    properties:
+      detail:
+        additionalProperties:
+          type: string
+        type: object
+      err_code:
+        type: integer
+      message:
+        type: string
+      now_ts:
+        type: integer
+    type: object
+  network.LoginResponse:
+    properties:
+      detail:
+        $ref: '#/definitions/network.LoginToken'
+      err_code:
+        type: integer
+      message:
+        type: string
+      now_ts:
+        type: integer
+    type: object
+  network.LoginToken:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Oauth2后端API接口文档
+  title: Oauth2
+  version: 0.0.1
+paths:
+  /login/oauth2:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 请求参数
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/network.GenLoginTokenByOauth2PostParam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/network.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "422":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "500":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+      summary: 通过签名获取token
+      tags:
+      - Login
+  /oauth2/wechat/required/subscribe:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: code
+        required: true
+        type: string
+      - description: 重定向的uri
+        in: query
+        name: redirect
+        required: true
+        type: string
+      - description: 重定向：university
+        example: university
+        in: query
+        name: service
+        required: true
+        type: string
+      - in: query
+        name: state
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Found
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "422":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+        "500":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/network.HTTPErrResponse'
+      summary: 微信登录接口
+      tags:
+      - Oauth2
+swagger: "2.0"

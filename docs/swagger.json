@@ -1,0 +1,192 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Oauth2后端API接口文档",
+        "title": "Oauth2",
+        "contact": {},
+        "version": "0.0.1"
+    },
+    "paths": {
+        "/login/oauth2": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Login"
+                ],
+                "summary": "通过签名获取token",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "object",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/network.GenLoginTokenByOauth2PostParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/network.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth2/wechat/required/subscribe": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Oauth2"
+                ],
+                "summary": "微信登录接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "重定向的uri",
+                        "name": "redirect",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "university",
+                        "description": "重定向：university",
+                        "name": "service",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "state",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/network.HTTPErrResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "network.GenLoginTokenByOauth2PostParam": {
+            "type": "object",
+            "required": [
+                "sign"
+            ],
+            "properties": {
+                "sign": {
+                    "description": "登录签名",
+                    "type": "string"
+                }
+            }
+        },
+        "network.HTTPErrResponse": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "err_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "now_ts": {
+                    "type": "integer"
+                }
+            }
+        },
+        "network.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "$ref": "#/definitions/network.LoginToken"
+                },
+                "err_code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "now_ts": {
+                    "type": "integer"
+                }
+            }
+        },
+        "network.LoginToken": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
